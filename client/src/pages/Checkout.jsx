@@ -1,42 +1,82 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
-const apiUrl = 'http://localhost:4000/api';
+const apiUrl = import.meta.env.VITE_API_URL || '/api';
+
+const emptyCustomer = {
+  name: '',
+  email: '',
+  address: '',
+  city: '',
+  postalCode: '',
+  country: ''
+};
 
 const Checkout = ({ cart, onOrderComplete }) => {
-  const [shipping, setShipping] = useState({ name: '', email: '', address: '' });
+  const [customer, setCustomer] = useState(emptyCustomer);
   const [status, setStatus] = useState('');
   const [loading, setLoading] = useState(false);
+  const [orderId, setOrderId] = useState('');
 
-  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const shippingFee = subtotal >= 200 ? 0 : 15;
+  const total = subtotal + shippingFee;
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setStatus('');
+    setOrderId('');
     setLoading(true);
 
-    const response = await fetch(`${apiUrl}/checkout`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cart, shipping })
-    });
+    try {
+      const response = await fetch(`${apiUrl}/orders`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: cart.map((item) => ({
+            productId: item._id,
+            quantity: item.quantity
+          })),
+          customer
+        })
+      });
 
-    const data = await response.json();
-    setLoading(false);
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Unable to complete checkout.');
+      }
 
-    if (response.ok) {
-      setStatus('Order confirmed! Thank you for your purchase.');
+      setStatus('Order confirmed. Your purchase has been saved to MongoDB.');
+      setOrderId(data.order.id);
       onOrderComplete();
-      setShipping({ name: '', email: '', address: '' });
-    } else {
-      setStatus(data.error || 'Unable to complete checkout.');
+      setCustomer(emptyCustomer);
+    } catch (error) {
+      setStatus(error.message);
+    } finally {
+      setLoading(false);
     }
   };
+
+  if (orderId) {
+    return (
+      <section className="section container">
+        <div className="checkout-form-card checkout-confirmation">
+          <span className="eyebrow">Order confirmed</span>
+          <h2>Thanks for your purchase</h2>
+          <p className="feedback">{status}</p>
+          <p className="order-id">Order ID: {orderId}</p>
+          <Link to="/" className="btn btn-primary">Continue shopping</Link>
+        </div>
+      </section>
+    );
+  }
 
   if (!cart.length) {
     return (
       <section className="section container">
         <h2>Your cart is empty</h2>
         <p>Add products to your cart before checking out.</p>
+        <Link to="/" className="btn btn-primary">Back to catalog</Link>
       </section>
     );
   }
@@ -49,14 +89,22 @@ const Checkout = ({ cart, onOrderComplete }) => {
           <h2>Your items</h2>
           <div className="order-list">
             {cart.map((item) => (
-              <div key={item.id} className="order-item">
+              <div key={item._id} className="order-item">
                 <div>
                   <strong>{item.name}</strong>
-                  <p>{item.quantity} × ${item.price}</p>
+                  <p>{item.quantity} × ${item.price.toFixed(2)}</p>
                 </div>
                 <span>${(item.price * item.quantity).toFixed(2)}</span>
               </div>
             ))}
+            <div className="order-line">
+              <span>Subtotal</span>
+              <strong>${subtotal.toFixed(2)}</strong>
+            </div>
+            <div className="order-line">
+              <span>Shipping</span>
+              <strong>{shippingFee === 0 ? 'Free' : `$${shippingFee.toFixed(2)}`}</strong>
+            </div>
             <div className="order-total">
               <span>Total</span>
               <strong>${total.toFixed(2)}</strong>
@@ -69,11 +117,11 @@ const Checkout = ({ cart, onOrderComplete }) => {
           <h2>Complete your purchase</h2>
           <form className="contact-form" onSubmit={handleSubmit}>
             <label>
-              Name
+              Full name
               <input
                 type="text"
-                value={shipping.name}
-                onChange={(e) => setShipping({ ...shipping, name: e.target.value })}
+                value={customer.name}
+                onChange={(event) => setCustomer({ ...customer, name: event.target.value })}
                 required
               />
             </label>
@@ -81,17 +129,44 @@ const Checkout = ({ cart, onOrderComplete }) => {
               Email
               <input
                 type="email"
-                value={shipping.email}
-                onChange={(e) => setShipping({ ...shipping, email: e.target.value })}
+                value={customer.email}
+                onChange={(event) => setCustomer({ ...customer, email: event.target.value })}
                 required
               />
             </label>
             <label>
               Address
               <textarea
-                rows="4"
-                value={shipping.address}
-                onChange={(e) => setShipping({ ...shipping, address: e.target.value })}
+                rows="3"
+                value={customer.address}
+                onChange={(event) => setCustomer({ ...customer, address: event.target.value })}
+                required
+              />
+            </label>
+            <label>
+              City
+              <input
+                type="text"
+                value={customer.city}
+                onChange={(event) => setCustomer({ ...customer, city: event.target.value })}
+                required
+              />
+            </label>
+            <label>
+              Postal code
+              <input
+                type="text"
+                value={customer.postalCode}
+                onChange={(event) => setCustomer({ ...customer, postalCode: event.target.value })}
+                required
+              />
+            </label>
+            <label>
+              Country
+              <input
+                type="text"
+                value={customer.country}
+                onChange={(event) => setCustomer({ ...customer, country: event.target.value })}
                 required
               />
             </label>
@@ -99,7 +174,8 @@ const Checkout = ({ cart, onOrderComplete }) => {
               {loading ? 'Placing order...' : 'Place order'}
             </button>
           </form>
-          {status && <p className="feedback">{status}</p>}
+          {status ? <p className="feedback">{status}</p> : null}
+          {orderId ? <p className="order-id">Order ID: {orderId}</p> : null}
         </div>
       </div>
     </section>

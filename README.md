@@ -1,31 +1,56 @@
 # Sesd Shop
 
-A responsive React frontend with a Node/Express backend.
+Full-stack e-commerce starter built with React, Vite, Express, and MongoDB.
 
-## Run Locally
+## Features
 
-Install dependencies:
+- Product catalog persisted in MongoDB
+- Category filtering and text search
+- Product detail pages using slugs
+- Cart stored in browser local storage
+- Checkout that saves orders to MongoDB
+- Contact form that saves customer inquiries to MongoDB
+- Automatic initial product seeding when the catalog is empty
+
+## Run locally
+
+1. Install dependencies:
 
 ```bash
 npm install
 ```
 
-Start both applications:
+2. Copy `.env.example` to `.env` and set your MongoDB connection string:
+
+```bash
+cp .env.example .env
+```
+
+3. Start MongoDB locally or use a MongoDB Atlas URI in `MONGODB_URI`.
+
+4. Start the app:
 
 ```bash
 npm run dev
 ```
 
-- Frontend: `http://localhost:5173`
-- Backend API: `http://localhost:4000/api`
+Frontend: `http://localhost:5173`  
+Backend API: `http://localhost:4000/api`
 
-## Build
+## Seed products manually
+
+If you want to replace the catalog with the sample data:
 
 ```bash
-npm run build
+npm run seed --workspace=server
 ```
 
-## Server Endpoints
+## API endpoints
 
+- `GET /api/health`
+- `GET /api/categories`
 - `GET /api/products`
+- `GET /api/products/:slugOrId`
 - `POST /api/contact`
+- `POST /api/orders`
+- `GET /api/orders/:id`
