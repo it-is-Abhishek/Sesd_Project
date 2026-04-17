@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { SignInButton, useAuth } from '@clerk/react';
 
 const apiUrl = import.meta.env.VITE_API_URL || '/api';
 
@@ -12,7 +13,8 @@ const emptyCustomer = {
   country: ''
 };
 
-const Checkout = ({ cart, onOrderComplete }) => {
+const Checkout = ({ cart, isSignedIn, onOrderComplete }) => {
+  const { getToken } = useAuth();
   const [customer, setCustomer] = useState(emptyCustomer);
   const [status, setStatus] = useState('');
   const [loading, setLoading] = useState(false);
@@ -30,8 +32,11 @@ const Checkout = ({ cart, onOrderComplete }) => {
 
     try {
       const response = await fetch(`${apiUrl}/orders`, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${await getToken()}`
+        },
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           items: cart.map((item) => ({
             productId: item._id,
@@ -77,6 +82,21 @@ const Checkout = ({ cart, onOrderComplete }) => {
         <h2>Your cart is empty</h2>
         <p>Add products to your cart before checking out.</p>
         <Link to="/" className="btn btn-primary">Back to catalog</Link>
+      </section>
+    );
+  }
+
+  if (!isSignedIn) {
+    return (
+      <section className="section container">
+        <div className="checkout-form-card checkout-confirmation">
+          <span className="eyebrow">Authentication required</span>
+          <h2>Sign in before checkout</h2>
+          <p>Sign in to place your order.</p>
+          <SignInButton mode="modal">
+            <button className="btn btn-primary" type="button">Sign in to continue</button>
+          </SignInButton>
+        </div>
       </section>
     );
   }

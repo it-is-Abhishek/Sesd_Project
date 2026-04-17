@@ -7,6 +7,7 @@ Full-stack e-commerce starter built with React, Vite, Express, and MongoDB.
 - Product catalog persisted in MongoDB
 - Category filtering and text search
 - Product detail pages using slugs
+- Clerk authentication for sign-in and protected checkout
 - Cart stored in browser local storage
 - Checkout that saves orders to MongoDB
 - Contact form that saves customer inquiries to MongoDB
@@ -20,15 +21,17 @@ Full-stack e-commerce starter built with React, Vite, Express, and MongoDB.
 npm install
 ```
 
-2. Copy `.env.example` to `.env` and set your MongoDB connection string:
+2. Copy `.env.example` to `.env` and set your MongoDB and Clerk keys:
 
 ```bash
 cp .env.example .env
 ```
 
-3. Start MongoDB locally or use a MongoDB Atlas URI in `MONGODB_URI`.
+3. Set `VITE_CLERK_PUBLISHABLE_KEY` for the Vite client and `CLERK_SECRET_KEY` for the Express server.
 
-4. Start the app:
+4. Start MongoDB locally or use a MongoDB Atlas URI in `MONGODB_URI`.
+
+5. Start the app:
 
 ```bash
 npm run dev

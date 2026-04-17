@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom';
 
 const stats = [
-  { value: '24h', label: 'Average dispatch window' },
-  { value: '4.8/5', label: 'Average rating across products' },
+  { value: '24h', label: 'Fast dispatch' },
+  { value: '4.8/5', label: 'Top-rated picks' },
   { value: 'Free', label: 'Shipping over $200' }
 ];
 
@@ -15,11 +15,7 @@ const Home = ({
   onSearchChange,
   loading,
   error,
-  addToCart,
-  form,
-  setForm,
-  message,
-  handleSubmit
+  addToCart
 }) => {
   const featuredProduct = products[0];
 
@@ -28,14 +24,11 @@ const Home = ({
       <section className="hero container" id="home">
         <div className="hero-copy">
           <span className="eyebrow">MongoDB commerce</span>
-          <h1>Build and run a complete e-commerce experience from one modern stack.</h1>
-          <p>
-            Search products, browse categories, save inquiries, and place persistent orders
-            through a React, Express, and MongoDB application.
-          </p>
+          <h1>Clean essentials for modern living.</h1>
+          <p>Shop curated gear, home pieces, and everyday upgrades.</p>
           <div className="hero-actions">
             <a href="#products" className="btn btn-primary">Shop now</a>
-            <a href="#contact" className="btn btn-secondary">Talk to sales</a>
+            <a href="#categories" className="btn btn-secondary">Browse categories</a>
           </div>
         </div>
 
@@ -43,7 +36,7 @@ const Home = ({
           <div className="feature-card feature-highlight">
             <p className="feature-label">Featured drop</p>
             <h2>{featuredProduct?.name || 'Loading catalog...'}</h2>
-            <p>{featuredProduct?.shortDescription || 'Your latest products will surface here.'}</p>
+            <p>{featuredProduct?.shortDescription || 'Latest arrivals land here.'}</p>
             {featuredProduct ? (
               <Link to={`/product/${featuredProduct.slug}`} className="btn btn-primary">
                 View product
@@ -64,7 +57,7 @@ const Home = ({
       <section className="section container" id="products">
         <div className="section-header">
           <span className="eyebrow">Catalog</span>
-          <h2>Searchable products powered by your MongoDB collection</h2>
+          <h2>Shop the latest picks</h2>
         </div>
 
         <div className="catalog-toolbar">
@@ -132,7 +125,7 @@ const Home = ({
       <section className="section container" id="categories">
         <div className="section-header">
           <span className="eyebrow">Collections</span>
-          <h2>Popular shopping categories</h2>
+          <h2>Browse by category</h2>
         </div>
         <div className="category-grid">
           {categories
@@ -144,7 +137,7 @@ const Home = ({
                 onClick={() => onCategoryChange(title)}
               >
                 <h3>{title}</h3>
-                <p>Browse the latest arrivals in {title.toLowerCase()}.</p>
+                <p>Explore {title.toLowerCase()}.</p>
               </button>
             ))}
         </div>
@@ -153,62 +146,21 @@ const Home = ({
       <section className="section about-section container" id="about">
         <div className="about-panel">
           <div>
-            <span className="eyebrow">Store stack</span>
-            <h2>React storefront, Express API, MongoDB persistence.</h2>
-            <p>
-              This starter now persists products, orders, and customer inquiries so you can
-              evolve it into a production store instead of a static mockup.
-            </p>
+            <span className="eyebrow">Why shop here</span>
+            <h2>Simple shopping, fast checkout.</h2>
+            <p>Focused products, clean browsing, and quick ordering.</p>
           </div>
           <div className="about-stats">
             <div>
               <strong>Products</strong>
-              <span>Served from MongoDB with filter and search support.</span>
+              <span>Easy to browse and compare.</span>
             </div>
             <div>
               <strong>Orders</strong>
-              <span>Checkout writes customer and item data to the database.</span>
+              <span>Fast checkout with saved orders.</span>
             </div>
           </div>
         </div>
-      </section>
-
-      <section className="section container contact-section" id="contact">
-        <div className="section-header">
-          <span className="eyebrow">Contact</span>
-          <h2>Capture leads directly in MongoDB</h2>
-        </div>
-        <form className="contact-form" onSubmit={handleSubmit}>
-          <label>
-            Name
-            <input
-              type="text"
-              value={form.name}
-              onChange={(event) => setForm({ ...form, name: event.target.value })}
-              required
-            />
-          </label>
-          <label>
-            Email
-            <input
-              type="email"
-              value={form.email}
-              onChange={(event) => setForm({ ...form, email: event.target.value })}
-              required
-            />
-          </label>
-          <label>
-            Message
-            <textarea
-              rows="5"
-              value={form.message}
-              onChange={(event) => setForm({ ...form, message: event.target.value })}
-              required
-            />
-          </label>
-          <button className="btn btn-primary" type="submit">Send message</button>
-          {message ? <p className="feedback">{message}</p> : null}
-        </form>
       </section>
     </>
   );

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
+import { ClerkLoaded, ClerkLoading, SignIn, SignUp, UserButton, useAuth } from '@clerk/react';
 import Home from './pages/Home';
 import ProductDetail from './pages/ProductDetail';
 import Checkout from './pages/Checkout';
@@ -7,7 +8,11 @@ import CartDrawer from './components/CartDrawer';
 
 const apiUrl = import.meta.env.VITE_API_URL || '/api';
 
-function App() {
+function AppShell() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { isSignedIn } = useAuth();
+  const [authMode, setAuthMode] = useState('sign-in');
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState(['All']);
   const [category, setCategory] = useState('All');
@@ -15,9 +20,7 @@ function App() {
   const [cart, setCart] = useState([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState('');
   const [catalogError, setCatalogError] = useState('');
-  const [form, setForm] = useState({ name: '', email: '', message: '' });
 
   useEffect(() => {
     const saved = localStorage.getItem('sesd-cart');
@@ -123,44 +126,55 @@ function App() {
   const clearCart = () => setCart([]);
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setMessage('');
-
-    try {
-      const response = await fetch(`${apiUrl}/contact`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form)
+  const goToSection = async (sectionId) => {
+    if (location.pathname !== '/') {
+      await navigate('/');
+      requestAnimationFrame(() => {
+        document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
-
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || 'Please complete every field.');
-      }
-
-      setMessage('Message sent. We will contact you shortly.');
-      setForm({ name: '', email: '', message: '' });
-    } catch (error) {
-      setMessage(error.message);
+      return;
     }
+
+    document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   return (
-    <Router>
-      <div className="app-shell">
-        <header className="site-header container">
-          <Link to="/" className="brand">Sesd<span>Shop</span></Link>
-          <nav className="nav-links">
-            <a href="/#products">Products</a>
-            <a href="/#categories">Categories</a>
-            <Link to="/checkout">Checkout</Link>
-          </nav>
-          <button className="cart-button" onClick={() => setCartOpen(true)}>
-            Cart ({cartCount})
-          </button>
-        </header>
+    <div className="app-shell">
+      <header className="site-header">
+        <div className="site-header-inner container">
+          <Link to="/" className="brand">North<span>Lane</span></Link>
+          {isSignedIn ? (
+            <nav className="nav-links">
+              <button className="nav-link-button" type="button" onClick={() => goToSection('products')}>
+                Products
+              </button>
+              <button className="nav-link-button" type="button" onClick={() => goToSection('categories')}>
+                Categories
+              </button>
+              <Link to="/checkout">Checkout</Link>
+            </nav>
+          ) : (
+            <div className="nav-spacer" />
+          )}
+          <div className="header-actions">
+            <ClerkLoading>
+              <div className="auth-skeleton" aria-hidden="true" />
+            </ClerkLoading>
+            <ClerkLoaded>
+              {isSignedIn ? (
+                <div className="auth-controls">
+                  <UserButton afterSignOutUrl="/" />
+                  <button className="cart-button" onClick={() => setCartOpen(true)}>
+                    Cart ({cartCount})
+                  </button>
+                </div>
+              ) : null}
+            </ClerkLoaded>
+          </div>
+        </div>
+      </header>
 
+      {isSignedIn ? (
         <CartDrawer
           cart={cart}
           open={cartOpen}
@@ -168,62 +182,96 @@ function App() {
           onRemove={removeFromCart}
           onQuantityChange={updateCartQuantity}
         />
+      ) : null}
 
-        <main>
-          <Routes>
-            <Route
-              path="/"
-              element={
-                <Home
-                  products={products}
-                  categories={categories}
-                  activeCategory={category}
-                  onCategoryChange={setCategory}
-                  search={search}
-                  onSearchChange={setSearch}
-                  loading={loading}
-                  error={catalogError}
-                  addToCart={addToCart}
-                  form={form}
-                  setForm={setForm}
-                  message={message}
-                  handleSubmit={handleSubmit}
-                />
-              }
-            />
-            <Route
-              path="/product/:slug"
-              element={<ProductDetail products={products} addToCart={addToCart} />}
-            />
-            <Route
-              path="/checkout"
-              element={
-                <Checkout
-                  cart={cart}
-                  onOrderComplete={() => {
-                    clearCart();
-                    setCartOpen(false);
-                  }}
-                />
-              }
-            />
-          </Routes>
-        </main>
+      <main>
+        <ClerkLoading>
+          <section className="section container page-loader">
+            <div className="page-loader-card">
+              <span className="eyebrow">Loading</span>
+              <h2>Preparing your store...</h2>
+            </div>
+          </section>
+        </ClerkLoading>
+        <ClerkLoaded>
+          {isSignedIn ? (
+            <Routes>
+              <Route
+                path="/"
+                element={
+                  <Home
+                    products={products}
+                    categories={categories}
+                    activeCategory={category}
+                    onCategoryChange={setCategory}
+                    search={search}
+                    onSearchChange={setSearch}
+                    loading={loading}
+                    error={catalogError}
+                    addToCart={addToCart}
+                  />
+                }
+              />
+              <Route
+                path="/product/:slug"
+                element={<ProductDetail products={products} addToCart={addToCart} />}
+              />
+              <Route
+                path="/checkout"
+                element={
+                  <Checkout
+                    cart={cart}
+                    isSignedIn={Boolean(isSignedIn)}
+                    onOrderComplete={() => {
+                      clearCart();
+                      setCartOpen(false);
+                    }}
+                  />
+                }
+              />
+            </Routes>
+          ) : (
+            <section className="section container auth-gate">
+              <div className="auth-gate-copy">
+                <span className="eyebrow">Members access</span>
+                <h1>Sign in to enter NorthLane.</h1>
+                <p>The storefront appears right after authentication.</p>
+                <div className="auth-toggle-row">
+                  <button
+                    className={`pill ${authMode === 'sign-in' ? 'pill-active' : ''}`}
+                    type="button"
+                    onClick={() => setAuthMode('sign-in')}
+                  >
+                    Sign in
+                  </button>
+                  <button
+                    className={`pill ${authMode === 'sign-up' ? 'pill-active' : ''}`}
+                    type="button"
+                    onClick={() => setAuthMode('sign-up')}
+                  >
+                    Sign up
+                  </button>
+                </div>
+              </div>
+              <div className="auth-gate-card">
+                {authMode === 'sign-in' ? (
+                  <SignIn routing="hash" signUpUrl="#sign-up" />
+                ) : (
+                  <SignUp routing="hash" signInUrl="#sign-in" />
+                )}
+              </div>
+            </section>
+          )}
+        </ClerkLoaded>
+      </main>
+    </div>
+  );
+}
 
-        <footer className="site-footer">
-          <div className="container footer-grid">
-            <div>
-              <div className="brand">Sesd<span>Shop</span></div>
-              <p>MongoDB-backed storefront with searchable catalog and persisted orders.</p>
-            </div>
-            <div>
-              <h4>Contact</h4>
-              <p>hi@sesdshop.com</p>
-              <p>+1 (555) 123-4567</p>
-            </div>
-          </div>
-        </footer>
-      </div>
+function App() {
+  return (
+    <Router>
+      <AppShell />
     </Router>
   );
 }

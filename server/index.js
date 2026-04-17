@@ -1,19 +1,48 @@
-import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
+import { clerkMiddleware, getAuth } from '@clerk/express';
+import dotenv from 'dotenv';
 import { connectDatabase } from './config/db.js';
 import Product from './models/Product.js';
 import Order from './models/Order.js';
 import Message from './models/Message.js';
 import { seedProductsIfEmpty } from './utils/seed.js';
 
+dotenv.config({ path: new URL('../.env', import.meta.url) });
+
+if (!process.env.CLERK_PUBLISHABLE_KEY && process.env.VITE_CLERK_PUBLISHABLE_KEY) {
+  process.env.CLERK_PUBLISHABLE_KEY = process.env.VITE_CLERK_PUBLISHABLE_KEY;
+}
+
 const app = express();
 const PORT = process.env.PORT || 4000;
 const allowedOrigin = process.env.CLIENT_URL || 'http://localhost:5173';
+const localOriginPattern = /^https?:\/\/(localhost|127\.0\.0\.1):\d+$/;
 
-app.use(cors({ origin: allowedOrigin }));
+app.use(clerkMiddleware());
+app.use(cors({
+  origin(origin, callback) {
+    if (!origin || origin === allowedOrigin || localOriginPattern.test(origin)) {
+      callback(null, true);
+      return;
+    }
+
+    callback(new Error('Origin not allowed by CORS.'));
+  }
+}));
 app.use(express.json());
+
+const requireApiAuth = (req, res, next) => {
+  const { isAuthenticated, userId } = getAuth(req);
+
+  if (!isAuthenticated || !userId) {
+    return res.status(401).json({ error: 'Authentication required.' });
+  }
+
+  req.authUserId = userId;
+  return next();
+};
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
@@ -94,7 +123,12 @@ app.post('/api/contact', async (req, res) => {
 });
 
 app.post('/api/orders', async (req, res) => {
+  const { isAuthenticated, userId } = getAuth(req);
   const { items, customer } = req.body;
+
+  if (!isAuthenticated || !userId) {
+    return res.status(401).json({ error: 'Authentication required.' });
+  }
 
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: 'Your cart is empty.' });
@@ -139,6 +173,7 @@ app.post('/api/orders', async (req, res) => {
     const total = subtotal + shippingFee;
 
     const order = await Order.create({
+      userId,
       customer,
       items: normalizedItems,
       subtotal,
@@ -161,9 +196,12 @@ app.post('/api/orders', async (req, res) => {
   }
 });
 
-app.get('/api/orders/:id', async (req, res) => {
+app.get('/api/orders/:id', requireApiAuth, async (req, res) => {
   try {
-    const order = await Order.findById(req.params.id);
+    const order = await Order.findOne({
+      _id: req.params.id,
+      userId: req.authUserId
+    });
     if (!order) {
       return res.status(404).json({ error: 'Order not found.' });
     }
@@ -172,6 +210,10 @@ app.get('/api/orders/:id', async (req, res) => {
   } catch (error) {
     return res.status(500).json({ error: 'Unable to load order.' });
   }
+});
+
+app.get('/api/me', requireApiAuth, async (req, res) => {
+  return res.json({ userId: req.authUserId });
 });
 
 if (process.env.NODE_ENV === 'production') {
