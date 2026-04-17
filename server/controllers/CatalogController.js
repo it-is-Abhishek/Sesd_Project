@@ -4,29 +4,49 @@ class CatalogController {
   }
 
   getHealth = (req, res) => {
-    res.json({ status: 'ok' });
+    res.json({
+      status: 'ok',
+      database: req.app.locals.databaseReady ? 'connected' : 'fallback'
+    });
   };
 
   getCategories = async (req, res) => {
     try {
+      if (!req.app.locals.databaseReady) {
+        return res.json(this.catalogService.getFallbackCategories());
+      }
+
       const categories = await this.catalogService.getCategories();
-      res.json(categories);
+      return res.json(categories);
     } catch (error) {
-      res.status(500).json({ error: 'Unable to load categories.' });
+      return res.status(500).json({ error: 'Unable to load categories.' });
     }
   };
 
   getProducts = async (req, res) => {
     try {
+      if (!req.app.locals.databaseReady) {
+        return res.json(this.catalogService.getFallbackProducts(req.query));
+      }
+
       const products = await this.catalogService.getProducts(req.query);
-      res.json(products);
+      return res.json(products);
     } catch (error) {
-      res.status(500).json({ error: 'Unable to load products.' });
+      return res.status(500).json({ error: 'Unable to load products.' });
     }
   };
 
   getProductByIdentifier = async (req, res) => {
     try {
+      if (!req.app.locals.databaseReady) {
+        const fallbackProduct = this.catalogService.getFallbackProductByIdentifier(req.params.identifier);
+        if (!fallbackProduct) {
+          return res.status(404).json({ error: 'Product not found.' });
+        }
+
+        return res.json(fallbackProduct);
+      }
+
       const product = await this.catalogService.getProductByIdentifier(req.params.identifier);
       if (!product) {
         return res.status(404).json({ error: 'Product not found.' });

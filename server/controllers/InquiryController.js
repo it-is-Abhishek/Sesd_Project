@@ -4,6 +4,12 @@ class InquiryController {
   }
 
   createInquiry = async (req, res) => {
+    if (!req.app.locals.databaseReady) {
+      return res.status(503).json({
+        error: 'Database is currently unavailable. Please try again later.'
+      });
+    }
+
     try {
       const inquiry = await this.inquiryService.createInquiry(req.body);
       return res.status(201).json({

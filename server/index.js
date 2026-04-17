@@ -53,6 +53,7 @@ app.use(cors({
   }
 }));
 app.use(express.json());
+app.locals.databaseReady = false;
 
 app.get('/api/health', catalogController.getHealth);
 app.get('/api/categories', catalogController.getCategories);
@@ -70,17 +71,20 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
-const startServer = async () => {
+const bootServer = async () => {
   try {
     await connectDatabase();
     await seedProductsIfEmpty();
-    app.listen(PORT, () => {
-      console.log(`Server running on http://localhost:${PORT}`);
-    });
+    app.locals.databaseReady = true;
   } catch (error) {
-    console.error(error.message);
-    process.exit(1);
+    console.error(`Database unavailable, starting API in fallback mode: ${error.message}`);
+    app.locals.databaseReady = false;
   }
+
+  app.listen(PORT, () => {
+    const mode = app.locals.databaseReady ? 'database connected' : 'fallback catalog mode';
+    console.log(`Server running on http://localhost:${PORT} (${mode})`);
+  });
 };
 
-startServer();
+bootServer();

@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { SignInButton, useAuth } from '@clerk/react';
 
-const apiUrl = import.meta.env.VITE_API_URL || '/api';
+const apiUrl =
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV ? 'http://localhost:4001/api' : '/api');
 
 const emptyCustomer = {
   name: '',

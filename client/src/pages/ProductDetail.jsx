@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
-const apiUrl = import.meta.env.VITE_API_URL || '/api';
+const apiUrl =
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV ? 'http://localhost:4001/api' : '/api');
 
 const ProductDetail = ({ products, addToCart }) => {
   const { slug } = useParams();

@@ -9,6 +9,7 @@ export const connectDatabase = async () => {
 
   mongoose.set('strictQuery', true);
   await mongoose.connect(mongoUri, {
-    dbName: process.env.MONGODB_DB || 'sesd_shop'
+    dbName: process.env.MONGODB_DB || 'sesd_shop',
+    serverSelectionTimeoutMS: 8000
   });
 };

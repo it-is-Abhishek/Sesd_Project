@@ -5,6 +5,12 @@ class OrderController {
   }
 
   createOrder = async (req, res) => {
+    if (!req.app.locals.databaseReady) {
+      return res.status(503).json({
+        error: 'Database is currently unavailable. Product browsing is available, but checkout is temporarily disabled.'
+      });
+    }
+
     try {
       const user = await this.authService.ensureUser(req);
       const order = await this.orderService.createOrder({
@@ -25,6 +31,10 @@ class OrderController {
   };
 
   getOrderById = async (req, res) => {
+    if (!req.app.locals.databaseReady) {
+      return res.status(503).json({ error: 'Database is currently unavailable.' });
+    }
+
     try {
       const user = await this.authService.ensureUser(req);
       const order = await this.orderService.getOrderForUser(req.params.id, user.clerkUserId);
@@ -41,6 +51,10 @@ class OrderController {
   };
 
   getCurrentUser = async (req, res) => {
+    if (!req.app.locals.databaseReady) {
+      return res.status(503).json({ error: 'Database is currently unavailable.' });
+    }
+
     try {
       const user = await this.authService.ensureUser(req);
       return res.json({
