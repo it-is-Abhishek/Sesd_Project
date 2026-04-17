@@ -2,44 +2,50 @@
 
 ```mermaid
 erDiagram
-    USER ||--|| CART : owns
-    USER ||--o{ ORDER : places
-    ORDER ||--|| PAYMENT : has
-    ORDER }o--o{ PRODUCT : contains
-    CART }o--o{ PRODUCT : includes
+    CLERK_USER ||--o{ ORDER : places
+    ORDER ||--|{ ORDER_ITEM : contains
+    PRODUCT ||--o{ ORDER_ITEM : purchased_in
+    CLERK_USER ||--o{ MESSAGE : sends
 
-    USER {
-        string id
-        string name
+    CLERK_USER {
+        string userId
         string email
-        string password
-        string role
     }
 
     PRODUCT {
-        string id
+        string _id
         string name
-        string price
-        string description
-        string stock
-    }
-
-    CART {
-        string id
-        string userId
+        string slug
+        string category
+        number price
+        number stock
+        boolean featured
     }
 
     ORDER {
-        string id
+        string _id
         string userId
-        string totalAmount
+        string customerName
+        string customerEmail
+        string address
+        number subtotal
+        number shippingFee
+        number total
         string status
     }
 
-    PAYMENT {
-        string id
-        string orderId
-        string status
-        string method
+    ORDER_ITEM {
+        string productId
+        string name
+        number price
+        number quantity
+        string image
+    }
+
+    MESSAGE {
+        string _id
+        string name
+        string email
+        string message
     }
 ```

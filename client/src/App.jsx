@@ -6,7 +6,15 @@ import ProductDetail from './pages/ProductDetail';
 import Checkout from './pages/Checkout';
 import CartDrawer from './components/CartDrawer';
 
-const apiUrl = import.meta.env.VITE_API_URL || '/api';
+const apiUrl =
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV ? 'http://localhost:4001/api' : '/api');
+
+const clerkCardAppearance = {
+  elements: {
+    card: 'clerk-card-surface'
+  }
+};
 
 function AppShell() {
   const navigate = useNavigate();
@@ -255,9 +263,17 @@ function AppShell() {
               </div>
               <div className="auth-gate-card">
                 {authMode === 'sign-in' ? (
-                  <SignIn routing="hash" signUpUrl="#sign-up" />
+                  <SignIn
+                    routing="hash"
+                    signUpUrl="#sign-up"
+                    appearance={clerkCardAppearance}
+                  />
                 ) : (
-                  <SignUp routing="hash" signInUrl="#sign-in" />
+                  <SignUp
+                    routing="hash"
+                    signInUrl="#sign-in"
+                    appearance={clerkCardAppearance}
+                  />
                 )}
               </div>
             </section>
@@ -270,7 +286,7 @@ function AppShell() {
 
 function App() {
   return (
-    <Router>
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <AppShell />
     </Router>
   );

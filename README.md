@@ -38,7 +38,7 @@ npm run dev
 ```
 
 Frontend: `http://localhost:5173`  
-Backend API: `http://localhost:4000/api`
+Backend API: `http://localhost:4001/api`
 
 ## Seed products manually
 

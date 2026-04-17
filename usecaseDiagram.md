@@ -1,42 +1,32 @@
-# useCase Diagram
-
+# Use Case Diagram
 
 ```mermaid
 flowchart LR
-    Customer(["🛍️ Customer"])
-    Admin(["🧑‍💼 Admin"])
+    Guest["Guest User"]
+    Customer["Authenticated Customer"]
+    Clerk["Clerk Auth"]
+    System["NorthLane System"]
 
-    subgraph AUTH["🔐 Authentication"]
-        direction TB
-        UC1["Register"]
-        UC2["Login"]
-        UC3["Logout"]
-    end
+    Guest --> UC1["Sign Up"]
+    Guest --> UC2["Sign In"]
+    UC1 --> Clerk
+    UC2 --> Clerk
 
-    subgraph SHOP["🛒 Shopping"]
-        direction TB
-        UC4["Browse Products"]
-        UC5["Search & Filter"]
-        UC6["View Product Details"]
-        UC7["Add to Cart"]
-        UC8["Manage Cart"]
-        UC9["Checkout"]
-        UC10["Make Payment"]
-        UC11["View Orders"]
-    end
+    Customer --> UC3["Browse Products"]
+    Customer --> UC4["Search Products"]
+    Customer --> UC5["Filter by Category"]
+    Customer --> UC6["View Product Details"]
+    Customer --> UC7["Add to Cart"]
+    Customer --> UC8["Manage Cart"]
+    Customer --> UC9["Checkout"]
+    Customer --> UC10["View Order"]
 
-    subgraph ADMIN_PANEL["⚙️ Admin Panel"]
-        direction TB
-        UC12["Add Product"]
-        UC13["Edit Product"]
-        UC14["Delete Product"]
-        UC15["Manage Orders"]
-        UC16["Manage Users"]
-    end
-
-    Customer --- AUTH
-    Customer --- SHOP
-
-    Admin --- AUTH
-    Admin --- ADMIN_PANEL
+    UC3 --> System
+    UC4 --> System
+    UC5 --> System
+    UC6 --> System
+    UC7 --> System
+    UC8 --> System
+    UC9 --> System
+    UC10 --> System
 ```

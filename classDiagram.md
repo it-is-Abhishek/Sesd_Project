@@ -1,45 +1,97 @@
-# class Diagram
+# Class Diagram
 
 ```mermaid
 classDiagram
-    class User {
-        +id : string
-        +name : string
-        +email : string
-        +password : string
-        +role : string
+    class CatalogController {
+        +getHealth()
+        +getCategories()
+        +getProducts()
+        +getProductByIdentifier()
+    }
+
+    class OrderController {
+        +createOrder()
+        +getOrderById()
+        +getCurrentUser()
+    }
+
+    class InquiryController {
+        +createInquiry()
+    }
+
+    class CatalogService {
+        +getCategories()
+        +getProducts(query)
+        +getProductByIdentifier(identifier)
+        -buildFilters(query)
+    }
+
+    class OrderService {
+        +createOrder(data)
+        +getOrderForUser(orderId,userId)
+        -validateItems(items)
+        -validateCustomer(customer)
+        -normalizeItem(item,productMap)
+    }
+
+    class InquiryService {
+        +createInquiry(data)
+    }
+
+    class AuthService {
+        +getAuthenticatedUserId(req)
+    }
+
+    class ProductRepository {
+        +getDistinctCategories()
+        +findProducts(filters)
+        +findByIdentifier(identifier)
+        +findByIds(ids)
+    }
+
+    class OrderRepository {
+        +create(orderData)
+        +findByIdForUser(orderId,userId)
+    }
+
+    class MessageRepository {
+        +create(messageData)
     }
 
     class Product {
-        +id : string
-        +name : string
-        +price : number
-        +description : string
-        +stock : number
-    }
-
-    class Cart {
-        +id : string
-        +userId : string
+        +name
+        +slug
+        +price
+        +category
+        +stock
     }
 
     class Order {
-        +id : string
-        +userId : string
-        +totalAmount : number
-        +status : string
+        +userId
+        +customer
+        +items
+        +subtotal
+        +total
+        +status
     }
 
-    class Payment {
-        +id : string
-        +orderId : string
-        +status : string
-        +method : string
+    class Message {
+        +name
+        +email
+        +message
     }
 
-    User --> Cart
-    User --> Order
-    Cart --> Product
-    Order --> Product
-    Order --> Payment
+    CatalogController --> CatalogService
+    OrderController --> OrderService
+    OrderController --> AuthService
+    InquiryController --> InquiryService
+
+    CatalogService --> ProductRepository
+    OrderService --> OrderRepository
+    OrderService --> ProductRepository
+    InquiryService --> MessageRepository
+
+    ProductRepository --> Product
+    OrderRepository --> Order
+    MessageRepository --> Message
 ```

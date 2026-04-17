@@ -6,9 +6,9 @@ export default defineConfig({
   envDir: '..',
   server: {
     port: 5173,
-    host: '127.0.0.1',
+    host: 'localhost',
     proxy: {
-      '/api': 'http://localhost:4000'
+      '/api': 'http://localhost:4001'
     }
   }
 });
